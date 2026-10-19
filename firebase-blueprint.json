@@ -108,6 +108,16 @@
           "description": "Quality score or compliance assessment against company standards",
           "maxLength": 2000
         },
+        "userRole": {
+          "type": "string",
+          "description": "Auditee designation or role in TRAC",
+          "maxLength": 200
+        },
+        "userDept": {
+          "type": "string",
+          "description": "Auditee college or department in TRAC",
+          "maxLength": 200
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time",

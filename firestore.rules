@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
     }
 
     function incoming() {
@@ -51,21 +51,25 @@ service cloud.firestore {
 
     function isValidInteraction(data, userId) {
       return data.keys().hasAll(['id', 'userId', 'topic', 'userInput', 'geminiResponse']) &&
-        data.keys().hasOnly(['id', 'userId', 'topic', 'userInput', 'geminiResponse', 'sessionTitle', 'insightsSummary', 'brainstormingIdeas', 'actionableSuggestions', 'qualityAssessment', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'topic', 'userInput', 'geminiResponse', 'sessionTitle', 'insightsSummary', 'brainstormingIdeas', 'actionableSuggestions', 'qualityAssessment', 'userRole', 'userDept', 'createdAt', 'updatedAt']) &&
         data.userId == userId &&
         data.userId == request.auth.uid &&
         data.id is string &&
         data.id.size() <= 128 &&
         data.topic in ['work_processes', 'challenges', 'complaints', 'suggestions', 'general'] &&
         data.userInput is string &&
-        data.userInput.size() <= 10000 &&
+        data.userInput.size() <= 20000 &&
         data.geminiResponse is string &&
-        data.geminiResponse.size() <= 30000 &&
-        (!('sessionTitle' in data) || (data.sessionTitle is string && data.sessionTitle.size() <= 200)) &&
-        (!('insightsSummary' in data) || (data.insightsSummary is string && data.insightsSummary.size() <= 5000)) &&
-        (!('brainstormingIdeas' in data) || (data.brainstormingIdeas is string && data.brainstormingIdeas.size() <= 5000)) &&
-        (!('actionableSuggestions' in data) || (data.actionableSuggestions is string && data.actionableSuggestions.size() <= 5000)) &&
-        (!('qualityAssessment' in data) || (data.qualityAssessment is string && data.qualityAssessment.size() <= 2000));
+        data.geminiResponse.size() <= 50000 &&
+        (!('sessionTitle' in data) || (data.sessionTitle is string && data.sessionTitle.size() <= 500)) &&
+        (!('insightsSummary' in data) || (data.insightsSummary is string && data.insightsSummary.size() <= 20000) || data.insightsSummary is list) &&
+        (!('brainstormingIdeas' in data) || (data.brainstormingIdeas is string && data.brainstormingIdeas.size() <= 20000) || data.brainstormingIdeas is list) &&
+        (!('actionableSuggestions' in data) || (data.actionableSuggestions is string && data.actionableSuggestions.size() <= 20000) || data.actionableSuggestions is list) &&
+        (!('qualityAssessment' in data) || (data.qualityAssessment is string && data.qualityAssessment.size() <= 10000) || data.qualityAssessment is map) &&
+        (!('userRole' in data) || (data.userRole is string && data.userRole.size() <= 200)) &&
+        (!('userDept' in data) || (data.userDept is string && data.userDept.size() <= 200)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
     }
 
     function isValidCompanyStandard(data) {
@@ -117,8 +121,8 @@ service cloud.firestore {
       match /interactions/{interactionId} {
         allow get: if isSignedIn() && isValidId(interactionId) && (request.auth.uid == userId || isAdmin());
         allow list: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(interactionId) && isValidInteraction(incoming(), userId);
-        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidId(interactionId) && isValidInteraction(incoming(), userId) && incoming().userId == existing().userId;
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(interactionId) && isValidInteraction(incoming(), userId);
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(interactionId) && isValidInteraction(incoming(), userId) && incoming().userId == existing().userId;
         allow delete: if isSignedIn() && (request.auth.uid == userId || isAdmin()) && isValidId(interactionId);
       }
     }

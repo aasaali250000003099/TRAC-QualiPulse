@@ -203,10 +203,47 @@ Provide your comprehensive quality audit review, brainstorming ideas, and reflec
       };
     }
 
+    // Defensive stringification helper to prevent Array/Object payload poisoning
+    const stringifyField = (val: any, fallback = ''): string => {
+      if (typeof val === 'string') return val.trim();
+      if (Array.isArray(val)) {
+        return val.map((item) => (typeof item === 'string' ? item : JSON.stringify(item))).join('\n• ');
+      }
+      if (typeof val === 'object' && val !== null) {
+        return Object.entries(val)
+          .map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+          .join('\n');
+      }
+      return val ? String(val) : fallback;
+    };
+
+    const normalizedData = {
+      conversationalResponse: stringifyField(
+        parsed?.conversationalResponse || parsed?.conversational_response || parsed?.response || text,
+        'Quality audit review processed.'
+      ),
+      insightsSummary: stringifyField(
+        parsed?.insightsSummary || parsed?.insights_summary,
+        'Synthesized insights from user audit submission.'
+      ),
+      brainstormingIdeas: stringifyField(
+        parsed?.brainstormingIdeas || parsed?.brainstorming_ideas,
+        'Explore process automation, cross-team syncs, and SLA documentation.'
+      ),
+      actionableSuggestions: stringifyField(
+        parsed?.actionableSuggestions || parsed?.actionable_suggestions,
+        'Document current pain points and review with department lead.'
+      ),
+      qualityAssessment: stringifyField(
+        parsed?.qualityAssessment || parsed?.quality_assessment,
+        'Audited & Recorded: General Process Review'
+      ),
+    };
+
     return res.json({
       success: true,
       modelUsed,
-      data: parsed,
+      data: normalizedData,
     });
   } catch (err: any) {
     console.error('Error in /api/gemini/analyze:', err);

@@ -100,29 +100,63 @@ export const AuditConsole: React.FC<AuditConsoleProps> = ({
     }
   };
 
+  const normalizeInteraction = (interaction: AuditInteraction): AuditInteraction => {
+    const toCleanString = (val: any, fallback = ''): string => {
+      if (typeof val === 'string') return val.trim();
+      if (Array.isArray(val)) {
+        return val.map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join('\n• ');
+      }
+      if (typeof val === 'object' && val !== null) {
+        return Object.entries(val)
+          .map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+          .join('\n');
+      }
+      return val ? String(val) : fallback;
+    };
+
+    return {
+      id: interaction.id,
+      userId: interaction.userId,
+      sessionTitle: toCleanString(interaction.sessionTitle, 'Audit Review').slice(0, 500),
+      topic: interaction.topic || 'general',
+      userInput: toCleanString(interaction.userInput, 'N/A').slice(0, 20000),
+      geminiResponse: toCleanString(interaction.geminiResponse, 'Quality audit review processed.').slice(0, 50000),
+      insightsSummary: toCleanString(interaction.insightsSummary, '').slice(0, 20000),
+      brainstormingIdeas: toCleanString(interaction.brainstormingIdeas, '').slice(0, 20000),
+      actionableSuggestions: toCleanString(interaction.actionableSuggestions, '').slice(0, 20000),
+      qualityAssessment: toCleanString(interaction.qualityAssessment, 'General Process Review').slice(0, 10000),
+      userRole: toCleanString(interaction.userRole, 'Faculty / Staff').slice(0, 200),
+      userDept: toCleanString(interaction.userDept, 'Department').slice(0, 200),
+      createdAt: interaction.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  };
+
   const persistInteraction = async (interaction: AuditInteraction): Promise<boolean> => {
     if (!currentUser) return false;
     setSaveStatus('saving');
     setCanRetrySave(false);
 
+    const safeInteraction = normalizeInteraction(interaction);
+
     try {
-      const sanitized = sanitizePayload(interaction);
-      const docRef = doc(db, 'users', currentUser.uid, 'interactions', interaction.id);
+      const sanitized = sanitizePayload(safeInteraction);
+      const docRef = doc(db, 'users', currentUser.uid, 'interactions', safeInteraction.id);
 
       await setDoc(docRef, sanitized);
 
       setSaveStatus('saved');
-      setLastSavedInteraction(interaction);
-      onInteractionSaved(interaction);
+      setLastSavedInteraction(safeInteraction);
+      onInteractionSaved(safeInteraction);
       setPendingInteraction(null);
       return true;
     } catch (err: unknown) {
       console.error('Firestore save failed:', err);
       setSaveStatus('failed');
       setCanRetrySave(true);
-      setPendingInteraction(interaction);
+      setPendingInteraction(safeInteraction);
       try {
-        handleFirestoreError(err, OperationType.WRITE, `users/${currentUser.uid}/interactions/${interaction.id}`);
+        handleFirestoreError(err, OperationType.WRITE, `users/${currentUser.uid}/interactions/${safeInteraction.id}`);
       } catch (e: any) {
         setErrorMessage(`Persistence Error: ${e.message}`);
       }
