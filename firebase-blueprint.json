@@ -1,0 +1,224 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile storing identity, job function, role description, and timestamp metadata",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address from Google SSO",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User's display name",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "description": "User role: user or admin",
+          "enum": ["user", "admin"]
+        },
+        "jobRole": {
+          "type": "string",
+          "description": "Professional job role in the company",
+          "maxLength": 128
+        },
+        "department": {
+          "type": "string",
+          "description": "Company department or division",
+          "maxLength": 128
+        },
+        "jobDescription": {
+          "type": "string",
+          "description": "Detailed function or job description for audit context",
+          "maxLength": 5000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record update timestamp"
+        }
+      },
+      "required": ["userId", "email", "role"]
+    },
+    "AuditInteraction": {
+      "title": "AuditInteraction",
+      "description": "A multi-turn audit dialogue interaction between the user and Gemini for quality review, challenges, complaints, and suggestions",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique interaction record ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the interaction owner",
+          "maxLength": 128
+        },
+        "sessionTitle": {
+          "type": "string",
+          "description": "Short title describing the audit session topic",
+          "maxLength": 200
+        },
+        "topic": {
+          "type": "string",
+          "description": "Audit conversation topic area",
+          "enum": ["work_processes", "challenges", "complaints", "suggestions", "general"]
+        },
+        "userInput": {
+          "type": "string",
+          "description": "User's statement, query, or audit reflection",
+          "maxLength": 10000
+        },
+        "geminiResponse": {
+          "type": "string",
+          "description": "Gemini AI response with insights, summaries, and reflection",
+          "maxLength": 30000
+        },
+        "insightsSummary": {
+          "type": "string",
+          "description": "Structured executive summary of insights",
+          "maxLength": 5000
+        },
+        "brainstormingIdeas": {
+          "type": "string",
+          "description": "Brainstorming and improvement ideas",
+          "maxLength": 5000
+        },
+        "actionableSuggestions": {
+          "type": "string",
+          "description": "Concrete actionable next steps",
+          "maxLength": 5000
+        },
+        "qualityAssessment": {
+          "type": "string",
+          "description": "Quality score or compliance assessment against company standards",
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when interaction was submitted"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last modification"
+        }
+      },
+      "required": ["id", "userId", "topic", "userInput", "geminiResponse"]
+    },
+    "CompanyStandard": {
+      "title": "CompanyStandard",
+      "description": "Company information, audit benchmarks, standard operating procedures, and quality rubrics uploaded by Super Admin as basis for audit",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Standard identifier",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the benchmark or standard guideline",
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "description": "Category such as SOP, Quality Benchmark, Policy, Job Matrix",
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "High level description of standard",
+          "maxLength": 1000
+        },
+        "content": {
+          "type": "string",
+          "description": "Full text or markdown guidelines of the standard",
+          "maxLength": 50000
+        },
+        "uploadedBy": {
+          "type": "string",
+          "description": "Admin UID who uploaded standard",
+          "maxLength": 128
+        },
+        "uploadedByEmail": {
+          "type": "string",
+          "description": "Admin email who uploaded standard",
+          "maxLength": 256
+        },
+        "version": {
+          "type": "string",
+          "description": "Version identifier e.g. 1.0",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["id", "title", "category", "content", "uploadedBy"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted admin registry document validating super administrator privilege",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Super admin email address",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "description": "Super Admin role string",
+          "enum": ["superadmin", "admin"]
+        },
+        "assignedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date assignment was recorded"
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual user profiles containing role, department, and job description"
+    },
+    "/users/{userId}/interactions/{interactionId}": {
+      "schema": "AuditInteraction",
+      "description": "Private, owner-isolated quality audit interactions and multi-turn reflections"
+    },
+    "/company_standards/{standardId}": {
+      "schema": "CompanyStandard",
+      "description": "Company reference standards and audit benchmarks uploaded by the Super Admin"
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminRecord",
+      "description": "Registry of system administrators"
+    }
+  }
+}

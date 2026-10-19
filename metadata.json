@@ -1,0 +1,8 @@
+{
+  "name": "TRAC QualiPulse - Tawi-Tawi Regional Agricultural College Quality Audit System",
+  "description": "Institutional quality audit and workforce intelligence system for Tawi-Tawi Regional Agricultural College. Powered by Gemini 3.6 Flash and Firestore with AACCUP/CHED benchmarking, Super Admin governance, and strict faculty data isolation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
